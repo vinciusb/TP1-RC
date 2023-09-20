@@ -8,23 +8,31 @@
 #			: make clean - remove objetos e executável
 #-------------------------------------------------------------------------------
 #-pg for gprof
-CPP := g++ -g -std=c++17
-TARGET := tp01
+C := gcc -g
+TARGET := server
 
 # Diretórios
 BIN := ./bin/
-INC := ./include/
+INC := ./include/*
+# Server ./include/Client
 OBJ := ./obj/
-SRC := ./src/
+SRC := ./src/**
 
-LIST_SRC_CPP := $(wildcard $(SRC)*.cpp)
-LIST_OBJ := $(patsubst $(SRC)%.cpp, $(OBJ)%.o, $(LIST_SRC_CPP))
+# INCLUDES
+LIST_INC := $(wildcard $(INC))
+LIST_INC_FLAG := $(patsubst %, -I %, $(LIST_INC))
+# SOURCE FILES
+LIST_SRC_C := $(wildcard $(SRC)*.c)
+LIST_OBJ := $(patsubst $(SRC)%.c, $(OBJ)%.o, $(LIST_SRC_C))
 
-$(OBJ)%.o: $(SRC)%.cpp
-	$(CPP) -c $< -o $@ -I $(INC)
+SOURCES := $(shell find $(SOURCEDIR) -name '*.c')
+
+$(OBJ)%.o: $(SRC)%.c
+	$(C) -c $< -o $@ $(LIST_INC_FLAG)
 	
 all: $(LIST_OBJ)
-	$(CPP) -o $(TARGET) $(LIST_OBJ)
+	@echo $(SOURCES)
+	$(C) -o $(TARGET) $(LIST_OBJ)
 
 clean:
 	rm $(BIN) $(LIST_OBJ) 
