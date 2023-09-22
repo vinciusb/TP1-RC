@@ -14,3 +14,11 @@ void logError(const char* str) {
     printf("%s\n", str);
     exit(EXIT_FAILURE);
 }
+
+void logAction(Action* action) {
+    printf("[log] Type: %d, X: %d, Y: %d\n",
+           action->type,
+           action->coordinates[0],
+           action->coordinates[1]);
+    printMineSweeper(action->board);
+}

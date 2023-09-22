@@ -10,8 +10,6 @@
 #include <MineSweeper.h>
 #include <sys/socket.h>
 
-#define SPACING " "
-
 void createMineSweeper(MineSweeper* mine, char* inputFileName) {
     char* line = NULL;
     size_t len = 0;

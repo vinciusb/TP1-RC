@@ -31,11 +31,6 @@ typedef struct Client {
      */
     struct sockaddr* addr;
     /**
-     * @brief
-     *
-     */
-    int port;
-    /**
      * @brief The socket ID.
      *
      */

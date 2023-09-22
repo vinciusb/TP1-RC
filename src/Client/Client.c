@@ -15,8 +15,6 @@ void getXY(char* str, int* x, int* y);
 void createClient(Client* client, char* IP, char* port) {
     // Allocates the mine sweeper game
     client->game = (MineSweeper*)malloc(sizeof(MineSweeper));
-    // Define protocol infos
-    client->port = atoi(port);
 
     // Parses the IP address
     if(addrParse(IP, port, &client->storage))
@@ -101,19 +99,19 @@ int addrParse(char* IP, char* portstr, struct sockaddr_storage* storage) {
     if(IP == NULL || portstr == NULL) return 1;
 
     // PORT PARSING
-    uint16_t p = (uint16_t)atoi(portstr);
+    uint16_t port = (uint16_t)atoi(portstr);
     // Not valid port number
-    if(p == 0) return 1;
+    if(port == 0) return 1;
 
     // Network byte order - Host to network short
-    p = htons(p);
+    port = htons(port);
 
     // IP PARSING
     struct in_addr inaddr4;  // 32-bit
     if(inet_pton(AF_INET, IP, &inaddr4)) {
         struct sockaddr_in* addr4 = (struct sockaddr_in*)storage;
         addr4->sin_family = AF_INET;
-        addr4->sin_port = p;
+        addr4->sin_port = port;
         addr4->sin_addr = inaddr4;
         return 0;
     }
@@ -122,7 +120,7 @@ int addrParse(char* IP, char* portstr, struct sockaddr_storage* storage) {
     if(inet_pton(AF_INET6, IP, &inaddr6)) {
         struct sockaddr_in6* addr6 = (struct sockaddr_in6*)storage;
         addr6->sin6_family = AF_INET6;
-        addr6->sin6_port = p;
+        addr6->sin6_port = port;
         memcpy(&(addr6->sin6_addr), &inaddr6, sizeof(inaddr6));
         return 0;
     }

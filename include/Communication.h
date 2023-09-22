@@ -7,6 +7,7 @@
  *
  */
 
+#include <MineSweeper.h>
 #include <arpa/inet.h>
 #include <inttypes.h>
 #include <stdio.h>
@@ -15,6 +16,8 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#define ACTION_SIZE sizeof(Action)
 
 /**
  * @brief
@@ -50,3 +53,9 @@ typedef struct action {
  * @param str The error message.
  */
 void logError(const char* str);
+
+/**
+ * @brief Log action.
+ *
+ */
+void logAction(Action* action);

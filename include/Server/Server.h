@@ -20,23 +20,25 @@
  *
  */
 typedef struct Server {
+    /**
+     * @brief The server address storage.
+     *
+     */
     struct sockaddr_storage storage;
-    struct sockaddr* clientAddr;
     /**
-     * @brief
+     * @brief The s address.
      *
      */
-    int isIPv6;
+    struct sockaddr* addr;
     /**
-     * @brief
-     *
-     */
-    int port;
-    /**
-     * @brief The socket ID.
+     * @brief The server socket ID.
      *
      */
     int socket;
+    /**
+     * @brief The mine sweeper game board.
+     *
+     */
     MineSweeper* game;
 } Server;
 
@@ -63,3 +65,13 @@ void destroyServer(Server* server);
  * @param server The server to be started.
  */
 void run(Server* server);
+
+/**
+ * @brief Function that tries to parse the server address.
+ *
+ * @param IPvx v4 or v6.
+ * @param port The port.
+ * @param storage The address storage struct.
+ * @return int Returns 1 if fails, 0 otherwise.
+ */
+int addrParse(char* IPvx, char* port, struct sockaddr_storage* storage);
