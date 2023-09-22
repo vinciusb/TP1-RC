@@ -1,7 +1,7 @@
 /**
  * @file main.c
  * @author Vinícius Braga Freire (vinicius.braga@dcc.ufmg.br)
- * @brief main - Redes de Computadores - UFMG
+ * @brief main do server - Redes de Computadores - UFMG
  * @version 1.0
  * @date 2023-09-19
  *
@@ -29,7 +29,7 @@ int describeArgs(int argc, char** argv, ArgsDesc* args);
 
 int main(int argc, char** argv) {
     ArgsDesc args;
-    if(describeArgs(argc, argv, &args)) printf("Erro nos argumentos.");
+    if(describeArgs(argc, argv, &args)) printf("error: Invalid argument.");
 
     // Creates the server side
     Server server;

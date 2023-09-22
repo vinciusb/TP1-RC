@@ -16,7 +16,7 @@
  * @brief
  *
  */
-typedef enum int8_t {
+typedef enum {
     FLAG = -3,
     OCULT,
     BOMB,
@@ -62,3 +62,10 @@ void createMineSweeper(MineSweeper* mine, char* inputFileName);
  * @param server The game to be destructed.
  */
 void destroyMineSweeper(MineSweeper* mine);
+
+/**
+ * @brief Function that prints a minesweeper board.
+ *
+ * @param board The board to be printed.
+ */
+void printMineSweeper(BOARD_CELL board[4][4]);

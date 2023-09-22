@@ -9,16 +9,34 @@
  *
  */
 
+#include <Communication.h>
 #include <MineSweeper.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 /**
  * @brief Struct that represents the server side of this server-client service.
  *
  */
 typedef struct Server {
-    char *IPvx, *port, *inputFilePath;
+    struct sockaddr_storage storage;
+    struct sockaddr* clientAddr;
+    /**
+     * @brief
+     *
+     */
+    int isIPv6;
+    /**
+     * @brief
+     *
+     */
+    int port;
+    /**
+     * @brief The socket ID.
+     *
+     */
+    int socket;
     MineSweeper* game;
 } Server;
 

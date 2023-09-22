@@ -9,33 +9,32 @@
 #-------------------------------------------------------------------------------
 #-pg for gprof
 C := gcc -g
-TARGET := server
+TARGET_SERVER := server
+TARGET_CLIENT := client
 
 # Diretórios
 BIN := ./bin/
-INC := ./include/*
-# Server ./include/Client
+INC := ./include/
 OBJ := ./obj/
-SRC := ./src/**
+SRC := ./src/
 
 # INCLUDES
 LIST_INC := $(wildcard $(INC))
-LIST_INC_FLAG := $(patsubst %, -I %, $(LIST_INC))
-# SOURCE FILES
-LIST_SRC_C := $(wildcard $(SRC)*.c)
-LIST_OBJ := $(patsubst $(SRC)%.c, $(OBJ)%.o, $(LIST_SRC_C))
-
-SOURCES := $(shell find $(SOURCEDIR) -name '*.c')
-
-$(OBJ)%.o: $(SRC)%.c
-	$(C) -c $< -o $@ $(LIST_INC_FLAG)
+LIST_INC_FLAG := -I $(INC) -I $(INC)Server -I $(INC)Client
 	
-all: $(LIST_OBJ)
-	@echo $(SOURCES)
-	$(C) -o $(TARGET) $(LIST_OBJ)
+all:
+	$(C) -c $(SRC)MineSweeper.c -o $(OBJ)MineSweeper.o $(LIST_INC_FLAG)
+	$(C) -c $(SRC)Communication.c -o $(OBJ)Communication.o $(LIST_INC_FLAG)
+	$(C) -c $(SRC)Server/Server.c -o $(OBJ)Server.o $(LIST_INC_FLAG)
+	$(C) -c $(SRC)Server/main.c -o $(OBJ)main_server.o $(LIST_INC_FLAG)
+	$(C) -c $(SRC)Client/Client.c -o $(OBJ)Client.o $(LIST_INC_FLAG)
+	$(C) -c $(SRC)Client/main.c -o $(OBJ)main_client.o $(LIST_INC_FLAG)
+
+	$(C) -o $(BIN)$(TARGET_SERVER) $(OBJ)MineSweeper.o $(OBJ)Communication.o $(OBJ)Server.o $(OBJ)main_server.o
+	$(C) -o $(BIN)$(TARGET_CLIENT) $(OBJ)MineSweeper.o $(OBJ)Communication.o $(OBJ)Client.o $(OBJ)main_client.o
 
 clean:
-	rm $(BIN) $(LIST_OBJ) 
+	rm $(BIN) $(OBJ)*
 
 proof:
 	gprof $(BIN)$(TARGET) ./bin/gmon.out > ./tmp/analise.txt
