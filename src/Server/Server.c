@@ -83,6 +83,10 @@ void run(Server* server) {
                           ACTION_SIZE,
                           0))
                 logError("error: Didn't send all the bytes");
+
+            // Avoid to wait for another answer of the client since the game is
+            // going to be aborted in their side after receiving the game over
+            if(action->type == GAME_OVER || action->type == WIN) break;
         }
         // Close the communication with the client
         close(server->clientSocket);
@@ -138,10 +142,9 @@ void processAction(Server* server, Action* action) {
             memcpy(action->board, server->game->current, BOARD_SIZE);
             break;
         case EXIT: printf("client disconnected\n"); break;
-        case GAME_OVER:
-            /* code */
-            break;
     }
+    // case GAME_OVER: break; // ACHO QUE O SERVER QUE DEVERIA ENVIAR,
+    // NAO O CLIENT
 }
 
 int addrParse(char* IPvx, char* portstr, struct sockaddr_storage* storage) {

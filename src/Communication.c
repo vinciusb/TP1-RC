@@ -38,8 +38,19 @@ void logAction(Action* action) {
 
 int sendAction(
     int destSocket, Action* action, char* buffer, size_t size, int flags) {
+    Action* convertedAction = (Action*)malloc(sizeof(Action));
+    // Convert to big endian
+    convertedAction->type = htonl(action->type);
+    convertedAction->coordinates[0] = htonl(action->coordinates[0]);
+    convertedAction->coordinates[1] = htonl(action->coordinates[1]);
+    for(int i = 0; i < 4; i++)
+        for(int j = 0; j < 4; j++)
+            convertedAction->board[i][j] = htonl(action->board[i][j]);
+
     // Copies the action as an byte string
-    memcpy(buffer, action, size);
+    memcpy(buffer, convertedAction, size);
+    // Since the buffer has already copied the value, then frees this tmp action
+    free(convertedAction);
     // Sends the message
     if(send(destSocket, buffer, size, flags) != size) return 1;
     return 0;
@@ -51,5 +62,14 @@ int recvAction(
     if(recv(originSocket, buffer, ACTION_SIZE, flags) != size) return 1;
     // Copies the content from the buffer to the action variable
     memcpy(action, buffer, size);
+
+    // Convert from big endian
+    action->type = ntohl(action->type);
+    action->coordinates[0] = ntohl(action->coordinates[0]);
+    action->coordinates[1] = ntohl(action->coordinates[1]);
+    for(int i = 0; i < 4; i++)
+        for(int j = 0; j < 4; j++)
+            action->board[i][j] = ntohl(action->board[i][j]);
+
     return 0;
 }
