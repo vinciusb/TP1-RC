@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define SPACING " "
+#define SPACING "\t\t"
 #define BOARD_SIZE sizeof(BOARD_CELL[4][4])
 
 /**
