@@ -74,3 +74,36 @@ void printMineSweeper(BOARD_CELL board[4][4]) {
         }
     }
 }
+
+int revealCoordinate(MineSweeper* mine, int x, int y) {
+    // If the cell to be revealed is a bomb, then game over
+    if(mine->answer[x][y] == BOMB) {
+        // Copies the answer to the current board
+        memcpy(mine->current, mine->answer, BOARD_SIZE);
+        return 2;
+    }
+    // Reveals this cell
+    mine->current[x][y] = mine->answer[x][y];
+
+    int count = 0;
+    for(int i = 0; i < 4; i++)
+        for(int j = 0; j < 4; j++)
+            // If there are remaining cells to be revealed
+            if(mine->answer[i][j] >= ZERO
+               && mine->current[i][j] != mine->answer[i][j])
+                return 0;
+
+    // Else it's a win
+    return 1;
+}
+
+void setFlagAt(BOARD_CELL board[4][4], int x, int y) { board[x][y] = FLAG; }
+
+void removeFlagAt(BOARD_CELL board[4][4], int x, int y) {
+    if(board[x][y] == FLAG) board[x][y] = OCULT;
+}
+
+void resetBoard(BOARD_CELL board[4][4]) {
+    for(int i = 0; i < 4; i++)
+        for(int j = 0; j < 4; j++) board[i][j] = OCULT;
+}

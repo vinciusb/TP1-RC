@@ -26,7 +26,7 @@ typedef struct Server {
      */
     struct sockaddr_storage storage;
     /**
-     * @brief The s address.
+     * @brief The server address.
      *
      */
     struct sockaddr* addr;
@@ -36,10 +36,20 @@ typedef struct Server {
      */
     int socket;
     /**
+     * @brief The socket to communicate with client.
+     *
+     */
+    int clientSocket;
+    /**
      * @brief The mine sweeper game board.
      *
      */
     MineSweeper* game;
+    /**
+     * @brief The buffer for communication.
+     *
+     */
+    char buffer[ACTION_SIZE];
 } Server;
 
 /**
@@ -65,6 +75,15 @@ void destroyServer(Server* server);
  * @param server The server to be started.
  */
 void run(Server* server);
+
+/**
+ * @brief Function that process an action and creates an action to be sent to
+ * the client side.
+ *
+ * @param server The server to process the action.
+ * @param action The action itself.
+ */
+void processAction(Server* server, Action* action);
 
 /**
  * @brief Function that tries to parse the server address.

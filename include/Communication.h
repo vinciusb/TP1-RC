@@ -59,3 +59,30 @@ void logError(const char* str);
  *
  */
 void logAction(Action* action);
+
+/**
+ * @brief Sends the action.
+ *
+ * @param destSocket
+ * @param action
+ * @param buffer
+ * @param size
+ * @param flags
+ *
+ * @return int 0 in case of success and 1 otherwise.
+ */
+int sendAction(
+    int destSocket, Action* action, char* buffer, size_t size, int flags);
+
+/**
+ * @brief Receives the action.
+ *
+ * @param originSocket
+ * @param action
+ * @param buffer
+ * @param size
+ * @param flags
+ * @return int 0 in case of success and 1 otherwise.
+ */
+int recvAction(
+    int originSocket, Action* action, char* buffer, size_t size, int flags);

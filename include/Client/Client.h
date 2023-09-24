@@ -35,7 +35,16 @@ typedef struct Client {
      *
      */
     int socket;
-    MineSweeper* game;
+    /**
+     * @brief The mine sweeper game board.
+     *
+     */
+    BOARD_CELL board[4][4];
+    /**
+     * @brief The buffer for communication.
+     *
+     */
+    char buffer[ACTION_SIZE];
 } Client;
 
 /**
@@ -64,9 +73,26 @@ void run(Client* client);
 /**
  * @brief Get the next action from cli.
  *
- * @return ActionType The action to be sent to the server.
+ * @param action The action to be sent to the server.
  */
-ActionType getNextActionFromCli();
+void getNextActionFromCli(Action* action);
+
+/**
+ * @brief Function that process an action and creates an action to be sent to
+ * the server side.
+ *
+ * @param client The client to process the action.
+ * @param action The action itself.
+ */
+void processAction(Client* client, Action* action);
+
+/**
+ * @brief Function that verifies if an action is valid. Prints in the prompt if
+ * any well known error happend.
+ *
+ * @return int 1 if is valid, 0 otherwise.
+ */
+int actionIsValid(Client* client, Action* action);
 
 /**
  * @brief Function that tries to parse the IP.

@@ -34,7 +34,7 @@ all:
 	$(C) -o $(BIN)$(TARGET_CLIENT) $(OBJ)MineSweeper.o $(OBJ)Communication.o $(OBJ)Client.o $(OBJ)main_client.o
 
 clean:
-	rm $(BIN) $(OBJ)*
+	rm $(BIN)* $(OBJ)*
 
 proof:
 	gprof $(BIN)$(TARGET) ./bin/gmon.out > ./tmp/analise.txt

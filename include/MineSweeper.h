@@ -11,11 +11,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define SPACING " "
+#define BOARD_SIZE sizeof(BOARD_CELL[4][4])
 
 /**
- * @brief
+ * @brief Enum for each type of cell in the mine sweeper board.
  *
  */
 typedef enum {
@@ -71,3 +73,39 @@ void destroyMineSweeper(MineSweeper* mine);
  * @param board The board to be printed.
  */
 void printMineSweeper(BOARD_CELL board[4][4]);
+
+/**
+ * @brief Function that reveals a game coordinate and returns the status of this
+ * movement.
+ *
+ * @param mine
+ * @param x
+ * @param y
+ * @return int 0 Revealed ok, 1 win, 2 game over
+ */
+int revealCoordinate(MineSweeper* mine, int x, int y);
+
+/**
+ * @brief Set a flag at the coordinate.
+ *
+ * @param board
+ * @param x
+ * @param y
+ */
+void setFlagAt(BOARD_CELL board[4][4], int x, int y);
+
+/**
+ * @brief Removes a flag from this board cell.
+ *
+ * @param board
+ * @param x
+ * @param y
+ */
+void removeFlagAt(BOARD_CELL board[4][4], int x, int y);
+
+/**
+ * @brief Resets the board to ocult cells.
+ *
+ * @param board
+ */
+void resetBoard(BOARD_CELL board[4][4]);

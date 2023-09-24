@@ -29,6 +29,12 @@ void createServer(Server* server, char* IPvx, char* port, char* inputFilePath) {
 
     // Start to listen and allow 10 pendent requests
     if(listen(server->socket, 10)) logError("error: listening.");
+
+    // Logs the answer in the terminal
+    printMineSweeper(server->game->answer);
+
+    // Cleans the server communication buffer
+    memset(server->buffer, 0, ACTION_SIZE);
 }
 
 void destroyServer(Server* server) {
@@ -37,34 +43,104 @@ void destroyServer(Server* server) {
 }
 
 void run(Server* server) {
-    // Logs the answer in the terminal
-    printMineSweeper(server->game->answer);
-    char buffer[ACTION_SIZE];
-    memset(buffer, 0, ACTION_SIZE);
+    // Accept the connection with a new client and gets the socket to
+    // communicate with him
+    struct sockaddr_storage clientStorage;
+    struct sockaddr* clientAddr = (struct sockaddr*)&clientStorage;
+    socklen_t clientAddrLen = sizeof(clientStorage);
 
-    // Server infinite loop
+    Action* action = (Action*)malloc(sizeof(Action));
+
+    // Infinite loop for each client that connects to the server
     while(1) {
-        // Accept the connection with the client and gets the socket to
-        // communicate with him
-        struct sockaddr_storage clientStorage;
-        struct sockaddr* clientAddr = (struct sockaddr*)&clientStorage;
-        int clientSocket =
-            accept(server->socket, clientAddr, sizeof(clientStorage));
-        if(clientSocket == -1) logError("error: Failed to accept client.");
+        // Resets the game board
+        resetBoard(server->game->current);
+        // Waits for the client to connect and accept him
+        server->clientSocket =
+            accept(server->socket, clientAddr, &clientAddrLen);
+        if(server->clientSocket == -1)
+            logError("error: Failed to accept client.");
 
-        // Receives message from client socket
-        size_t recvBytes = recv(clientSocket, buffer, ACTION_SIZE, 0);
-        Action* action = (Action*)buffer;
-        logAction(action);
+        // Server infinite loop
+        while(1) {
+            // Receives message from client socket
+            if(recvAction(server->clientSocket,
+                          action,
+                          server->buffer,
+                          ACTION_SIZE,
+                          0))
+                logError("error: Didn't receive all the bytes");
 
-        // Sends message to client
-        sprintf(buffer, "oioi");
-        size_t sentBytes = send(clientSocket, buffer, strlen(buffer) + 1, 0);
-        if(sentBytes != strlen(buffer) + 1)
-            logError("error: Didn't send all the bytes");
+            // Process this action
+            processAction(server, action);
+            // If the client quited the game
+            if(action->type == EXIT) break;
 
-        // Closes the connection
-        close(clientSocket);
+            // Send message back to client
+            if(sendAction(server->clientSocket,
+                          action,
+                          server->buffer,
+                          ACTION_SIZE,
+                          0))
+                logError("error: Didn't send all the bytes");
+        }
+        // Close the communication with the client
+        close(server->clientSocket);
+    }
+
+    free(action);
+}
+
+void processAction(Server* server, Action* action) {
+    switch(action->type) {
+        // Sends the first state of the game
+        case START:
+            // Client successfully connected
+            printf("client connected\n");
+            action->type = STATE;
+            memcpy(action->board, server->game->current, BOARD_SIZE);
+            break;
+
+        case REVEAL:
+            // Reveals a coordinate
+            int gameStatus = revealCoordinate(
+                server->game, action->coordinates[0], action->coordinates[1]);
+
+            if(gameStatus == 0) action->type = STATE;
+            else if(gameStatus == 1)
+                action->type = WIN;
+            else
+                action->type = GAME_OVER;
+
+            memcpy(action->board, server->game->current, BOARD_SIZE);
+            break;
+        case SET_FLAG:
+            setFlagAt(server->game->current,
+                      action->coordinates[0],
+                      action->coordinates[1]);
+
+            action->type = STATE;
+            memcpy(action->board, server->game->current, BOARD_SIZE);
+            break;
+        case REMOVE_FLAG:
+            removeFlagAt(server->game->current,
+                         action->coordinates[0],
+                         action->coordinates[1]);
+
+            action->type = STATE;
+            memcpy(action->board, server->game->current, BOARD_SIZE);
+            break;
+        case RESET:
+            printf("starting new game\n");
+
+            resetBoard(server->game->current);
+            action->type = STATE;
+            memcpy(action->board, server->game->current, BOARD_SIZE);
+            break;
+        case EXIT: printf("client disconnected\n"); break;
+        case GAME_OVER:
+            /* code */
+            break;
     }
 }
 

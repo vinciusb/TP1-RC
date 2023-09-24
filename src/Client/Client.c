@@ -13,9 +13,6 @@ void getXY(char* str, int* x, int* y);
 
 //========== CLIENT ============================================================
 void createClient(Client* client, char* IP, char* port) {
-    // Allocates the mine sweeper game
-    client->game = (MineSweeper*)malloc(sizeof(MineSweeper));
-
     // Parses the IP address
     if(addrParse(IP, port, &client->storage))
         logError("error: Failed at IP parsing.");
@@ -25,39 +22,71 @@ void createClient(Client* client, char* IP, char* port) {
     client->socket = socket(client->storage.ss_family, SOCK_STREAM, 0);
     if(client->socket == -1) logError("error: Socket not created.");
 
-    // Connects to the server
-    if(connect(client->socket, &client->addr, sizeof(client->storage)))
+    // Tries to connect to the server
+    if(connect(client->socket, client->addr, sizeof(client->storage)))
         logError("error: Connect failed.");
+
+    // Cleans the client communication buffer
+    memset(client->buffer, 0, ACTION_SIZE);
 }
 
-void destroyClient(Client* client) {
-    destroyMineSweeper(client->game);
-    close(client->socket);
-}
+void destroyClient(Client* client) { close(client->socket); }
 
 void run(Client* client) {
     int shouldContinue = 1;
+    Action* action = (Action*)malloc(sizeof(Action));
+
     // Client infinite loop
     while(shouldContinue) {
-        int x, y;
-        ActionType action = getNextActionFromCli(&x, &y);
+        getNextActionFromCli(action);
 
-        // Execute the action
-        switch(action) {
-            case START: break;
-            case REVEAL: break;
-            case SET_FLAG: break;
-            case REMOVE_FLAG:
-                // client->game.removeFlag();
-                break;
-            case RESET: break;
-            case EXIT: shouldContinue = 0; break;
-            case INVALID: printf("error: command not found\n"); break;
+        // Validades this action
+        if(actionIsValid(client, action)) {
+            // Send action to server
+            if(sendAction(
+                   client->socket, action, client->buffer, ACTION_SIZE, 0)) {
+                // Closes the connection
+                close(client->socket);
+                logError("error: Didn't send all the bytes");
+            }
+
+            // If it's desired to quit the game
+            if(action->type == EXIT) break;
+
+            // Receives message from server
+            if(recvAction(
+                   client->socket, action, client->buffer, ACTION_SIZE, 0)) {
+                // Closes the connection
+                close(client->socket);
+                logError("error: Didn't receive all the bytes");
+            }
+
+            // Process this action
+            processAction(client, action);
+            // If it's game over, then finishes the game
+            if(action->type == GAME_OVER || action->type == WIN) break;
         }
     }
+    // Closes the connection
+    close(client->socket);
+    free(action);
 }
 
-ActionType getNextActionFromCli(int* x, int* y) {
+void processAction(Client* client, Action* action) {
+    switch(action->type) {
+        case STATE: break;
+        case WIN: printf("WIN!\n"); break;
+        case GAME_OVER: printf("GAME OVER!\n"); break;
+    }
+
+    // Since there are only 3 actions that the client is going to receive (and
+    // all of them need to show the board, then just copy and prints all the
+    // time)
+    memcpy(client->board, action->board, BOARD_SIZE);
+    printMineSweeper(client->board);
+}
+
+void getNextActionFromCli(Action* action) {
     // Reads the input command
     char* input = NULL;
     size_t ss;
@@ -65,34 +94,78 @@ ActionType getNextActionFromCli(int* x, int* y) {
     input[lineSize - 1] = '\0';
 
     // Check the known commands
-    if(!strcmp(input, "start")) return START;
-    if(!strcmp(input, "reset")) return RESET;
-    if(!strcmp(input, "exit")) return EXIT;
+    if(!strcmp(input, "start")) {
+        action->type = START;
+        return;
+    }
+    if(!strcmp(input, "reset")) {
+        action->type = RESET;
+        return;
+    }
+    if(!strcmp(input, "exit")) {
+        action->type = EXIT;
+        return;
+    }
 
     // Check more complex commands
     regex_t regex;
     // Reveal
     int a = regcomp(&regex, "reveal [0-9]+,[0-9]+", REG_EXTENDED | REG_NOSUB);
     if((regexec(&regex, input, 0, (regmatch_t*)NULL, 0)) == 0) {
-        getXY(input, x, y);
-        return REVEAL;
+        getXY(input, action->coordinates, action->coordinates + 1);
+        action->type = REVEAL;
+        return;
     }
     // Remove flag
     int c =
         regcomp(&regex, "remove_flag [0-9]+,[0-9]+", REG_EXTENDED | REG_NOSUB);
     if((regexec(&regex, input, 0, (regmatch_t*)NULL, 0)) == 0) {
-        getXY(input, x, y);
-        return REMOVE_FLAG;
+        getXY(input, action->coordinates, action->coordinates + 1);
+        action->type = REMOVE_FLAG;
+        return;
     }
     // Flag
     int b = regcomp(&regex, "flag [0-9]+,[0-9]+", REG_EXTENDED | REG_NOSUB);
     if((regexec(&regex, input, 0, (regmatch_t*)NULL, 0)) == 0) {
-        getXY(input, x, y);
-        return SET_FLAG;
+        getXY(input, action->coordinates, action->coordinates + 1);
+        action->type = SET_FLAG;
+        return;
     }
 
     // No valid action was found, then this action is invalidated
-    return INVALID;
+    action->type = INVALID;
+}
+
+int actionIsValid(Client* client, Action* action) {
+    int x = action->coordinates[0], y = action->coordinates[1];
+    switch(action->type) {
+        case REVEAL:
+            // If the coordinate is outside the board
+            if(!((0 <= x && x <= 3) && (0 <= y && y <= 3))) {
+                printf("error: invalid cell\n");
+                return 0;
+            }
+            // Trying to reveal an already revealed cell
+            if(client->board[x][y] >= ZERO) {
+                printf("error: cell already revealed\n");
+                return 0;
+            }
+            break;
+        case SET_FLAG:
+            // Trying to put flag in a cell that already have flag
+            if(client->board[x][y] == FLAG) {
+                printf("error: cell already has a flag\n");
+                return 0;
+            }
+            // Trying to flag an already revealed cell
+            if(client->board[x][y] >= ZERO) {
+                printf("error: cannot insert flag in revealed cell\n");
+                return 0;
+            }
+            break;
+        case INVALID: printf("error: command not found\n"); return 0;
+    }
+    return 1;
 }
 
 int addrParse(char* IP, char* portstr, struct sockaddr_storage* storage) {
