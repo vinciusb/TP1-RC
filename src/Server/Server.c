@@ -22,8 +22,13 @@ void createServer(Server* server, char* IPvx, char* port, char* inputFilePath) {
     server->socket = socket(server->storage.ss_family, SOCK_STREAM, 0);
     if(server->socket == -1) logError("error: Socket not created.");
 
+    int tmp = 1;
+    if(setsockopt(server->socket, SOL_SOCKET, SO_REUSEADDR, &tmp, sizeof(int))
+       != 0)
+        logError("error: Failed at set socket.");
+
     // Binds the port to the socket
-    server->addr = (struct sockaddr*)&server->storage;
+    server->addr = (struct sockaddr*)(&server->storage);
     if(bind(server->socket, server->addr, sizeof(server->storage)))
         logError("error: binding.");
 
@@ -60,6 +65,9 @@ void run(Server* server) {
             accept(server->socket, clientAddr, &clientAddrLen);
         if(server->clientSocket == -1)
             logError("error: Failed to accept client.");
+
+        // Client successfully connected
+        printf("client connected\n");
 
         // Server infinite loop
         while(1) {
@@ -99,8 +107,6 @@ void processAction(Server* server, Action* action) {
     switch(action->type) {
         // Sends the first state of the game
         case START:
-            // Client successfully connected
-            printf("client connected\n");
             action->type = STATE;
             memcpy(action->board, server->game->current, BOARD_SIZE);
             break;

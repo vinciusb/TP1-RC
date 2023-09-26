@@ -45,6 +45,11 @@ typedef struct Client {
      *
      */
     char buffer[ACTION_SIZE];
+    /**
+     * @brief Flag that indicates if the game have already started.
+     *
+     */
+    int started;
 } Client;
 
 /**

@@ -28,16 +28,17 @@ void createClient(Client* client, char* IP, char* port) {
 
     // Cleans the client communication buffer
     memset(client->buffer, 0, ACTION_SIZE);
+
+    client->started = 0;
 }
 
 void destroyClient(Client* client) { close(client->socket); }
 
 void run(Client* client) {
-    int shouldContinue = 1;
     Action* action = (Action*)malloc(sizeof(Action));
 
     // Client infinite loop
-    while(shouldContinue) {
+    while(1) {
         getNextActionFromCli(action);
 
         // Validades this action
@@ -137,6 +138,14 @@ void getNextActionFromCli(Action* action) {
 }
 
 int actionIsValid(Client* client, Action* action) {
+    // Make sure to start the game
+    if(action->type == START) {
+        client->started = 1;
+        return 1;
+    }
+    // If the game has not started, then no action is valid other then START
+    if(!client->started) return 0;
+
     int x = action->coordinates[0], y = action->coordinates[1];
     switch(action->type) {
         case REVEAL:
