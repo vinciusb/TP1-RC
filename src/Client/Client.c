@@ -64,8 +64,6 @@ void run(Client* client) {
 
             // Process this action
             processAction(client, action);
-            // If it's game over, then finishes the game
-            if(action->type == GAME_OVER || action->type == WIN) break;
         }
     }
     // Closes the connection
